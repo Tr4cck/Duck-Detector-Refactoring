@@ -82,6 +82,7 @@ import com.eltavine.duckdetector.features.mount.ui.card.MountDetectorCard
 import com.eltavine.duckdetector.features.nativeroot.ui.card.NativeRootDetectorCard
 import com.eltavine.duckdetector.features.playintegrityfix.ui.card.PlayIntegrityFixDetectorCard
 import com.eltavine.duckdetector.features.selinux.ui.card.SelinuxDetectorCard
+import com.eltavine.duckdetector.features.simcard.ui.card.SimCardCard
 import com.eltavine.duckdetector.features.su.ui.card.SuDetectorCard
 import com.eltavine.duckdetector.features.systemproperties.ui.card.SystemPropertiesDetectorCard
 import com.eltavine.duckdetector.features.tee.ui.card.TeeDetectorCard
@@ -236,6 +237,9 @@ fun DashboardScreen(
             }
             item {
                 DeviceInfoCard(model = uiState.deviceInfoCard)
+            }
+            item {
+                SimCardCard(model = uiState.simCardCard)
             }
         }
     }

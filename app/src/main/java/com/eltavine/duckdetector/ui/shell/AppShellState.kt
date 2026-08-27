@@ -19,6 +19,8 @@ package com.eltavine.duckdetector.ui.shell
 import com.eltavine.duckdetector.core.notifications.ScanNotificationPermissionState
 import com.eltavine.duckdetector.core.notifications.preferences.ScanNotificationPrefs
 import com.eltavine.duckdetector.core.packagevisibility.InstalledPackageVisibility
+import com.eltavine.duckdetector.core.simcard.SimCardPermissionState
+import com.eltavine.duckdetector.core.simcard.preferences.SimCardPermissionPrefs
 import com.eltavine.duckdetector.features.tee.data.preferences.TeeNetworkPrefs
 
 enum class AppDestination {
@@ -36,12 +38,15 @@ fun resolveStartupGateState(
     teePrefs: TeeNetworkPrefs?,
     notificationPrefs: ScanNotificationPrefs?,
     notificationPermissionState: ScanNotificationPermissionState,
+    simCardPrefs: SimCardPermissionPrefs?,
+    simCardPermissionState: SimCardPermissionState,
     packageVisibilityLoaded: Boolean,
     packageVisibility: InstalledPackageVisibility,
     packageVisibilityReviewAcknowledged: Boolean,
 ): StartupGateState {
     return when {
-        teePrefs == null || notificationPrefs == null || !packageVisibilityLoaded ->
+        teePrefs == null || notificationPrefs == null || simCardPrefs == null ||
+                !packageVisibilityLoaded ->
             StartupGateState.LOADING
 
         !notificationPrefs.notificationsPrompted &&
@@ -52,6 +57,10 @@ fun resolveStartupGateState(
                 notificationPermissionState.liveUpdatesSupported &&
                 !notificationPermissionState.liveUpdatesGranted &&
                 !notificationPrefs.liveUpdatesPrompted ->
+            StartupGateState.REQUIRES_POLICY_REVIEW
+
+        !simCardPrefs.prompted &&
+                !simCardPermissionState.granted ->
             StartupGateState.REQUIRES_POLICY_REVIEW
 
         packageVisibility == InstalledPackageVisibility.RESTRICTED &&

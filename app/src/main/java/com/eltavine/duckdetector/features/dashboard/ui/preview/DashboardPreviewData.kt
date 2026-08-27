@@ -46,6 +46,8 @@ import com.eltavine.duckdetector.features.playintegrityfix.domain.PlayIntegrityF
 import com.eltavine.duckdetector.features.playintegrityfix.presentation.PlayIntegrityFixCardModelMapper
 import com.eltavine.duckdetector.features.selinux.domain.SelinuxReport
 import com.eltavine.duckdetector.features.selinux.presentation.SelinuxCardModelMapper
+import com.eltavine.duckdetector.features.simcard.domain.SimCardReport
+import com.eltavine.duckdetector.features.simcard.presentation.SimCardCardModelMapper
 import com.eltavine.duckdetector.features.su.domain.SuReport
 import com.eltavine.duckdetector.features.su.presentation.SuCardModelMapper
 import com.eltavine.duckdetector.features.systemproperties.domain.SystemPropertiesReport
@@ -71,6 +73,7 @@ object DashboardPreviewData {
     private val nativeRootMapper = NativeRootCardModelMapper()
     private val playIntegrityFixMapper = PlayIntegrityFixCardModelMapper()
     private val selinuxMapper = SelinuxCardModelMapper()
+    private val simCardMapper = SimCardCardModelMapper()
     private val suMapper = SuCardModelMapper()
     private val systemPropertiesMapper = SystemPropertiesCardModelMapper()
     private val virtualizationMapper = VirtualizationCardModelMapper()
@@ -90,6 +93,7 @@ object DashboardPreviewData {
         val nativeRootCard = nativeRootMapper.map(NativeRootReport.loading())
         val playIntegrityFixCard = playIntegrityFixMapper.map(PlayIntegrityFixReport.loading())
         val selinuxCard = selinuxMapper.map(SelinuxReport.loading())
+        val simCardCard = simCardMapper.map(SimCardReport.loading())
         val suCard = suMapper.map(SuReport.loading())
         val systemPropertiesCard = systemPropertiesMapper.map(SystemPropertiesReport.loading())
         val virtualizationCard = virtualizationMapper.map(VirtualizationReport.loading())
@@ -239,6 +243,7 @@ object DashboardPreviewData {
                 ),
             ),
             deviceInfoCard = deviceInfoCard,
+            simCardCard = simCardCard,
             isLoading = true,
         )
     }

@@ -19,6 +19,8 @@ package com.eltavine.duckdetector.ui.shell
 import com.eltavine.duckdetector.core.notifications.ScanNotificationPermissionState
 import com.eltavine.duckdetector.core.notifications.preferences.ScanNotificationPrefs
 import com.eltavine.duckdetector.core.packagevisibility.InstalledPackageVisibility
+import com.eltavine.duckdetector.core.simcard.SimCardPermissionState
+import com.eltavine.duckdetector.core.simcard.preferences.SimCardPermissionPrefs
 import com.eltavine.duckdetector.features.tee.data.preferences.TeeNetworkPrefs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,6 +28,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppShellStateTest {
+
+    private val grantedSimCardPermissionState = SimCardPermissionState(
+        phoneStateGranted = true,
+        fineLocationGranted = true,
+    )
+    private val deniedSimCardPermissionState = SimCardPermissionState(
+        phoneStateGranted = false,
+        fineLocationGranted = false,
+    )
 
     @Test
     fun `null prefs stay in loading gate`() {
@@ -37,6 +48,8 @@ class AppShellStateTest {
                 liveUpdatesSupported = true,
                 liveUpdatesGranted = false,
             ),
+            simCardPrefs = null,
+            simCardPermissionState = deniedSimCardPermissionState,
             packageVisibilityLoaded = false,
             packageVisibility = InstalledPackageVisibility.UNKNOWN,
             packageVisibilityReviewAcknowledged = false,
@@ -64,6 +77,8 @@ class AppShellStateTest {
                 liveUpdatesSupported = true,
                 liveUpdatesGranted = false,
             ),
+            simCardPrefs = SimCardPermissionPrefs(prompted = true),
+            simCardPermissionState = grantedSimCardPermissionState,
             packageVisibilityLoaded = true,
             packageVisibility = InstalledPackageVisibility.FULL,
             packageVisibilityReviewAcknowledged = false,
@@ -91,6 +106,8 @@ class AppShellStateTest {
                 liveUpdatesSupported = true,
                 liveUpdatesGranted = false,
             ),
+            simCardPrefs = SimCardPermissionPrefs(prompted = true),
+            simCardPermissionState = grantedSimCardPermissionState,
             packageVisibilityLoaded = true,
             packageVisibility = InstalledPackageVisibility.FULL,
             packageVisibilityReviewAcknowledged = false,
@@ -98,6 +115,64 @@ class AppShellStateTest {
 
         assertEquals(StartupGateState.REQUIRES_POLICY_REVIEW, gateState)
         assertFalse(shouldCreateDetectorViewModels(gateState))
+    }
+
+    @Test
+    fun `unprompted sim card permissions require policy review`() {
+        val gateState = resolveStartupGateState(
+            teePrefs = TeeNetworkPrefs(
+                consentAsked = true,
+                consentGranted = true,
+                crlCacheJson = null,
+                crlFetchedAt = 0L,
+            ),
+            notificationPrefs = ScanNotificationPrefs(
+                notificationsPrompted = true,
+                liveUpdatesPrompted = true,
+            ),
+            notificationPermissionState = ScanNotificationPermissionState(
+                notificationsGranted = true,
+                liveUpdatesSupported = true,
+                liveUpdatesGranted = true,
+            ),
+            simCardPrefs = SimCardPermissionPrefs(prompted = false),
+            simCardPermissionState = deniedSimCardPermissionState,
+            packageVisibilityLoaded = true,
+            packageVisibility = InstalledPackageVisibility.FULL,
+            packageVisibilityReviewAcknowledged = false,
+        )
+
+        assertEquals(StartupGateState.REQUIRES_POLICY_REVIEW, gateState)
+        assertFalse(shouldCreateDetectorViewModels(gateState))
+    }
+
+    @Test
+    fun `skipped sim card permissions do not block detector creation`() {
+        val gateState = resolveStartupGateState(
+            teePrefs = TeeNetworkPrefs(
+                consentAsked = true,
+                consentGranted = true,
+                crlCacheJson = null,
+                crlFetchedAt = 0L,
+            ),
+            notificationPrefs = ScanNotificationPrefs(
+                notificationsPrompted = true,
+                liveUpdatesPrompted = true,
+            ),
+            notificationPermissionState = ScanNotificationPermissionState(
+                notificationsGranted = true,
+                liveUpdatesSupported = true,
+                liveUpdatesGranted = true,
+            ),
+            simCardPrefs = SimCardPermissionPrefs(prompted = true),
+            simCardPermissionState = deniedSimCardPermissionState,
+            packageVisibilityLoaded = true,
+            packageVisibility = InstalledPackageVisibility.FULL,
+            packageVisibilityReviewAcknowledged = false,
+        )
+
+        assertEquals(StartupGateState.READY, gateState)
+        assertTrue(shouldCreateDetectorViewModels(gateState))
     }
 
     @Test
@@ -118,6 +193,8 @@ class AppShellStateTest {
                 liveUpdatesSupported = true,
                 liveUpdatesGranted = true,
             ),
+            simCardPrefs = SimCardPermissionPrefs(prompted = true),
+            simCardPermissionState = grantedSimCardPermissionState,
             packageVisibilityLoaded = true,
             packageVisibility = InstalledPackageVisibility.FULL,
             packageVisibilityReviewAcknowledged = false,
@@ -145,6 +222,8 @@ class AppShellStateTest {
                 liveUpdatesSupported = true,
                 liveUpdatesGranted = true,
             ),
+            simCardPrefs = SimCardPermissionPrefs(prompted = true),
+            simCardPermissionState = grantedSimCardPermissionState,
             packageVisibilityLoaded = true,
             packageVisibility = InstalledPackageVisibility.RESTRICTED,
             packageVisibilityReviewAcknowledged = false,
@@ -172,6 +251,8 @@ class AppShellStateTest {
                 liveUpdatesSupported = true,
                 liveUpdatesGranted = true,
             ),
+            simCardPrefs = SimCardPermissionPrefs(prompted = true),
+            simCardPermissionState = grantedSimCardPermissionState,
             packageVisibilityLoaded = true,
             packageVisibility = InstalledPackageVisibility.FULL,
             packageVisibilityReviewAcknowledged = true,

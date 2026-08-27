@@ -32,6 +32,7 @@ import com.eltavine.duckdetector.features.mount.ui.model.MountCardModel
 import com.eltavine.duckdetector.features.nativeroot.ui.model.NativeRootCardModel
 import com.eltavine.duckdetector.features.playintegrityfix.ui.model.PlayIntegrityFixCardModel
 import com.eltavine.duckdetector.features.selinux.ui.model.SelinuxCardModel
+import com.eltavine.duckdetector.features.simcard.ui.model.SimCardCardModel
 import com.eltavine.duckdetector.features.su.ui.model.SuCardModel
 import com.eltavine.duckdetector.features.systemproperties.ui.model.SystemPropertiesCardModel
 import com.eltavine.duckdetector.features.tee.ui.model.TeeCardModel
@@ -85,6 +86,10 @@ class DashboardExportFormatter {
 
         appendLine("----- DEVICE INFO -----")
         appendDeviceInfo(state.deviceInfoCard)
+        appendLine()
+
+        appendLine("----- SIM CARD -----")
+        appendSimCard(state.simCardCard)
         appendLine()
 
         appendLine("========================================")
@@ -481,6 +486,33 @@ class DashboardExportFormatter {
             appendLine("  ${section.title}:")
             section.rows.forEach { row ->
                 appendLine("    ${row.label}: ${row.value}")
+            }
+        }
+    }
+
+    private fun StringBuilder.appendSimCard(model: SimCardCardModel) {
+        appendLine("  ${model.title}")
+        appendLine("  Verdict: ${model.verdict}")
+        appendHeaderFacts(headerFactsToPairs(model.headerFacts))
+        model.sections.forEach { section ->
+            appendLine("  ${section.title}:")
+            section.rows.forEach { row ->
+                appendLine("    ${row.label}: ${row.value}")
+            }
+            if (section.facts.isNotEmpty()) {
+                appendLine("    Facts:")
+                section.facts.forEach { fact ->
+                    appendLine("      ${if (fact.active) "[active]" else "[inactive]"} ${fact.label}")
+                }
+            }
+            section.cells.forEach { cell ->
+                val registeredLabel = if (cell.registered) "registered" else "not registered"
+                appendLine("    Cell (${cell.rat}, $registeredLabel):")
+                appendLine("      Signal: ${cell.dbm}")
+                appendLine("      Age: ${cell.ageMillis}")
+                cell.identityRows.forEach { row ->
+                    appendLine("      ${row.label}: ${row.value}")
+                }
             }
         }
     }

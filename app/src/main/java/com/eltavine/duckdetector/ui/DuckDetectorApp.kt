@@ -59,6 +59,9 @@ import com.eltavine.duckdetector.core.notifications.preferences.ScanNotification
 import com.eltavine.duckdetector.core.packagevisibility.InstalledPackageVisibilityChecker
 import com.eltavine.duckdetector.core.packagevisibility.preferences.PackageVisibilityReviewPrefs
 import com.eltavine.duckdetector.core.packagevisibility.preferences.PackageVisibilityReviewStore
+import com.eltavine.duckdetector.core.simcard.SimCardPermissions
+import com.eltavine.duckdetector.core.simcard.preferences.SimCardPermissionConsentStore
+import com.eltavine.duckdetector.core.simcard.preferences.SimCardPermissionPrefs
 import com.eltavine.duckdetector.core.startup.legal.AgreementAcceptancePrefs
 import com.eltavine.duckdetector.core.startup.legal.AgreementAcceptanceStore
 import com.eltavine.duckdetector.core.startup.legal.AgreementScreen
@@ -107,6 +110,9 @@ import com.eltavine.duckdetector.features.selinux.presentation.SelinuxUiStage
 import com.eltavine.duckdetector.features.selinux.presentation.SelinuxUiState
 import com.eltavine.duckdetector.features.selinux.presentation.SelinuxViewModel
 import com.eltavine.duckdetector.features.settings.ui.SettingsScreen
+import com.eltavine.duckdetector.features.simcard.presentation.SimCardUiStage
+import com.eltavine.duckdetector.features.simcard.presentation.SimCardUiState
+import com.eltavine.duckdetector.features.simcard.presentation.SimCardViewModel
 import com.eltavine.duckdetector.features.settings.ui.model.SettingsUiState
 import com.eltavine.duckdetector.features.su.presentation.SuUiStage
 import com.eltavine.duckdetector.features.su.presentation.SuUiState
@@ -167,6 +173,9 @@ fun DuckDetectorApp() {
     val packageVisibilityReviewStore = remember(appContext) {
         PackageVisibilityReviewStore.getInstance(appContext)
     }
+    val simCardPermissionStore = remember(appContext) {
+        SimCardPermissionConsentStore.getInstance(appContext)
+    }
     val agreementPrefs by produceState<AgreementAcceptancePrefs?>(
         initialValue = null,
         key1 = agreementStore,
@@ -215,6 +224,19 @@ fun DuckDetectorApp() {
             value = currentPrefs
         }
     }
+    val simCardPermissionPrefs by produceState<SimCardPermissionPrefs?>(
+        initialValue = null,
+        key1 = simCardPermissionStore,
+        key2 = agreementAccepted,
+    ) {
+        if (!agreementAccepted) {
+            value = null
+            return@produceState
+        }
+        simCardPermissionStore.prefs.collect { currentPrefs ->
+            value = currentPrefs
+        }
+    }
     val packageVisibilityState by produceState<StartupPackageVisibilityState?>(
         initialValue = null,
         key1 = appContext,
@@ -246,10 +268,15 @@ fun DuckDetectorApp() {
     var notificationPermissionState by remember {
         mutableStateOf(ScanNotificationPermissions.read(appContext))
     }
+    var simCardPermissionState by remember {
+        mutableStateOf(SimCardPermissions.read(appContext))
+    }
     val gateState = remember(
         teePrefs,
         notificationPrefs,
         notificationPermissionState,
+        simCardPermissionPrefs,
+        simCardPermissionState,
         packageVisibilityState,
         packageVisibilityReviewPrefs,
     ) {
@@ -257,6 +284,8 @@ fun DuckDetectorApp() {
             teePrefs = teePrefs,
             notificationPrefs = notificationPrefs,
             notificationPermissionState = notificationPermissionState,
+            simCardPrefs = simCardPermissionPrefs,
+            simCardPermissionState = simCardPermissionState,
             packageVisibilityLoaded = packageVisibilityState != null &&
                     packageVisibilityReviewPrefs != null,
             packageVisibility = packageVisibilityState?.visibility
@@ -291,6 +320,14 @@ fun DuckDetectorApp() {
             }
         }
     }
+    val simCardPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) {
+        simCardPermissionState = SimCardPermissions.read(appContext)
+        scope.launch {
+            simCardPermissionStore.markPrompted()
+        }
+    }
 
     LaunchedEffect(notificationPrefs, notificationPermissionState) {
         val prefs = notificationPrefs ?: return@LaunchedEffect
@@ -299,6 +336,13 @@ fun DuckDetectorApp() {
         }
         if (notificationPermissionState.liveUpdatesGranted && !prefs.liveUpdatesPrompted) {
             notificationConsentStore.markLiveUpdatesPrompted()
+        }
+    }
+
+    LaunchedEffect(simCardPermissionPrefs, simCardPermissionState) {
+        val prefs = simCardPermissionPrefs ?: return@LaunchedEffect
+        if (simCardPermissionState.granted && !prefs.prompted) {
+            simCardPermissionStore.markPrompted()
         }
     }
 
@@ -343,6 +387,8 @@ fun DuckDetectorApp() {
                         gateState = gateState,
                         notificationPrefs = notificationPrefs,
                         notificationPermissionState = notificationPermissionState,
+                        simCardPrefs = simCardPermissionPrefs,
+                        simCardPermissionState = simCardPermissionState,
                         teePrefs = teePrefs,
                         packageVisibilityState = packageVisibilityState,
                         packageVisibilityReviewAcknowledged =
@@ -377,6 +423,14 @@ fun DuckDetectorApp() {
                         onUseRegularNotifications = {
                             scope.launch {
                                 notificationConsentStore.markLiveUpdatesPrompted()
+                            }
+                        },
+                        onAllowSimCardPermissions = {
+                            simCardPermissionLauncher.launch(SimCardPermissions.requestedPermissions)
+                        },
+                        onSkipSimCardPermissions = {
+                            scope.launch {
+                                simCardPermissionStore.markPrompted()
                             }
                         },
                         onAllowCrlNetwork = {
@@ -455,6 +509,7 @@ private fun AppReadyShell(
     val nativeRootFactory = remember(context) { NativeRootViewModel.factory(context) }
     val playIntegrityFixFactory = remember { PlayIntegrityFixViewModel.factory() }
     val selinuxFactory = remember(context) { SelinuxViewModel.factory(context) }
+    val simCardFactory = remember(context) { SimCardViewModel.factory(context) }
     val suFactory = remember { SuViewModel.factory() }
     val systemPropertiesFactory = remember { SystemPropertiesViewModel.factory() }
     val virtualizationFactory = remember(context) { VirtualizationViewModel.factory(context) }
@@ -473,6 +528,7 @@ private fun AppReadyShell(
     val playIntegrityFixViewModel: PlayIntegrityFixViewModel =
         viewModel(factory = playIntegrityFixFactory)
     val selinuxViewModel: SelinuxViewModel = viewModel(factory = selinuxFactory)
+    val simCardViewModel: SimCardViewModel = viewModel(factory = simCardFactory)
     val suViewModel: SuViewModel = viewModel(factory = suFactory)
     val systemPropertiesViewModel: SystemPropertiesViewModel =
         viewModel(factory = systemPropertiesFactory)
@@ -490,6 +546,7 @@ private fun AppReadyShell(
     val nativeRootUiState by nativeRootViewModel.uiState.collectAsState()
     val playIntegrityFixUiState by playIntegrityFixViewModel.uiState.collectAsState()
     val selinuxUiState by selinuxViewModel.uiState.collectAsState()
+    val simCardUiState by simCardViewModel.uiState.collectAsState()
     val suUiState by suViewModel.uiState.collectAsState()
     val systemPropertiesUiState by systemPropertiesViewModel.uiState.collectAsState()
     val virtualizationUiState by virtualizationViewModel.uiState.collectAsState()
@@ -565,6 +622,7 @@ private fun AppReadyShell(
         dashboardScanCompletedAtEpochMillis,
         isDashboardLoading,
         deviceInfoUiState,
+        simCardUiState,
         bootloaderUiState,
         teeUiState,
         customRomUiState,
@@ -608,6 +666,7 @@ private fun AppReadyShell(
                 ),
             ),
             deviceInfoCard = deviceInfoUiState.cardModel,
+            simCardCard = simCardUiState.cardModel,
             isLoading = isDashboardLoading,
         )
     }

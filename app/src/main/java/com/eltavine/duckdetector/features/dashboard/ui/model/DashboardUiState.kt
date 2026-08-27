@@ -30,6 +30,7 @@ import com.eltavine.duckdetector.features.mount.ui.model.MountCardModel
 import com.eltavine.duckdetector.features.nativeroot.ui.model.NativeRootCardModel
 import com.eltavine.duckdetector.features.playintegrityfix.ui.model.PlayIntegrityFixCardModel
 import com.eltavine.duckdetector.features.selinux.ui.model.SelinuxCardModel
+import com.eltavine.duckdetector.features.simcard.ui.model.SimCardCardModel
 import com.eltavine.duckdetector.features.su.ui.model.SuCardModel
 import com.eltavine.duckdetector.features.systemproperties.ui.model.SystemPropertiesCardModel
 import com.eltavine.duckdetector.features.tee.ui.model.TeeCardModel
@@ -189,6 +190,7 @@ data class DashboardUiState(
     val topFindings: List<DashboardFindingModel>,
     val detectorCards: List<DashboardDetectorCardEntry>,
     val deviceInfoCard: DeviceInfoCardModel,
+    val simCardCard: SimCardCardModel,
     val isLoading: Boolean,
 )
 

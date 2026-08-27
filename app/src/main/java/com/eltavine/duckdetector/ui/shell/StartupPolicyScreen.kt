@@ -37,6 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.SimCard
 import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,6 +59,8 @@ import com.eltavine.duckdetector.R
 import com.eltavine.duckdetector.core.notifications.ScanNotificationPermissionState
 import com.eltavine.duckdetector.core.notifications.preferences.ScanNotificationPrefs
 import com.eltavine.duckdetector.core.packagevisibility.InstalledPackageVisibility
+import com.eltavine.duckdetector.core.simcard.SimCardPermissionState
+import com.eltavine.duckdetector.core.simcard.preferences.SimCardPermissionPrefs
 import com.eltavine.duckdetector.core.ui.components.WrapSafeText
 import com.eltavine.duckdetector.features.tee.data.preferences.TeeNetworkPrefs
 import com.eltavine.duckdetector.ui.theme.ShapeTokens
@@ -73,6 +76,8 @@ fun StartupPolicyScreen(
     gateState: StartupGateState,
     notificationPrefs: ScanNotificationPrefs?,
     notificationPermissionState: ScanNotificationPermissionState,
+    simCardPrefs: SimCardPermissionPrefs?,
+    simCardPermissionState: SimCardPermissionState,
     teePrefs: TeeNetworkPrefs?,
     packageVisibilityState: StartupPackageVisibilityState?,
     packageVisibilityReviewAcknowledged: Boolean,
@@ -80,6 +85,8 @@ fun StartupPolicyScreen(
     onSkipNotifications: () -> Unit,
     onOpenLiveUpdateSettings: () -> Unit,
     onUseRegularNotifications: () -> Unit,
+    onAllowSimCardPermissions: () -> Unit,
+    onSkipSimCardPermissions: () -> Unit,
     onAllowCrlNetwork: () -> Unit,
     onUseLocalCrlOnly: () -> Unit,
     onAcknowledgePackageVisibility: () -> Unit,
@@ -88,6 +95,7 @@ fun StartupPolicyScreen(
     val cards = if (
         gateState == StartupGateState.LOADING ||
         notificationPrefs == null ||
+        simCardPrefs == null ||
         teePrefs == null ||
         packageVisibilityState == null
     ) {
@@ -105,6 +113,12 @@ fun StartupPolicyScreen(
                 permissionState = notificationPermissionState,
                 onOpenLiveUpdateSettings = onOpenLiveUpdateSettings,
                 onUseRegularNotifications = onUseRegularNotifications,
+            ),
+            simCardPolicyCard(
+                simCardPrefs = simCardPrefs,
+                permissionState = simCardPermissionState,
+                onAllowSimCardPermissions = onAllowSimCardPermissions,
+                onSkipSimCardPermissions = onSkipSimCardPermissions,
             ),
             crlPolicyCard(
                 teePrefs = teePrefs,
@@ -507,6 +521,50 @@ private fun liveUpdatePolicyCard(
             statusLabel = stringResource(R.string.startup_status_regular),
             headline = stringResource(R.string.startup_live_update_regular_headline),
             detail = stringResource(R.string.startup_live_update_regular_detail),
+            tone = StartupPolicyTone.ACKNOWLEDGED,
+            requiresAction = false,
+        )
+    }
+}
+
+@Composable
+private fun simCardPolicyCard(
+    simCardPrefs: SimCardPermissionPrefs,
+    permissionState: SimCardPermissionState,
+    onAllowSimCardPermissions: () -> Unit,
+    onSkipSimCardPermissions: () -> Unit,
+): StartupPolicyCardUi {
+    return when {
+        permissionState.granted -> StartupPolicyCardUi(
+            icon = Icons.Rounded.SimCard,
+            title = stringResource(R.string.startup_simcard_title),
+            statusLabel = stringResource(R.string.startup_status_ready),
+            headline = stringResource(R.string.startup_simcard_ready_headline),
+            detail = stringResource(R.string.startup_simcard_ready_detail),
+            tone = StartupPolicyTone.READY,
+            requiresAction = false,
+        )
+
+        !simCardPrefs.prompted -> StartupPolicyCardUi(
+            icon = Icons.Rounded.SimCard,
+            title = stringResource(R.string.startup_simcard_title),
+            statusLabel = stringResource(R.string.startup_status_action_required),
+            headline = stringResource(R.string.startup_simcard_prompt_headline),
+            detail = stringResource(R.string.startup_simcard_prompt_detail),
+            tone = StartupPolicyTone.REQUIRED,
+            requiresAction = true,
+            primaryActionLabel = stringResource(R.string.startup_simcard_allow),
+            secondaryActionLabel = stringResource(R.string.startup_simcard_skip),
+            onPrimaryAction = onAllowSimCardPermissions,
+            onSecondaryAction = onSkipSimCardPermissions,
+        )
+
+        else -> StartupPolicyCardUi(
+            icon = Icons.Rounded.SimCard,
+            title = stringResource(R.string.startup_simcard_title),
+            statusLabel = stringResource(R.string.startup_status_skipped),
+            headline = stringResource(R.string.startup_simcard_skipped_headline),
+            detail = stringResource(R.string.startup_simcard_skipped_detail),
             tone = StartupPolicyTone.ACKNOWLEDGED,
             requiresAction = false,
         )

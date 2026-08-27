@@ -198,4 +198,13 @@ limitations under the License.
     <string name="startup_package_low_inventory_detail">Current visible package count: %1$d. Startup will continue, but Dangerous Apps will review this low-inventory condition as potential filtering evidence.</string>
     <string name="startup_package_ready_headline">PackageManager inventory looks full.</string>
     <string name="startup_package_ready_detail">Current visible package count: %1$d. Dangerous Apps can use the standard package inventory path.</string>
+    <string name="startup_simcard_title">SIM &amp; cell info</string>
+    <string name="startup_simcard_ready_headline">SIM and cell permissions are granted.</string>
+    <string name="startup_simcard_ready_detail">Duck Detector can collect subscription-scoped SIM state, service state, and CellInfo for every active SIM.</string>
+    <string name="startup_simcard_prompt_headline">Choose whether to collect SIM and cell info.</string>
+    <string name="startup_simcard_prompt_detail">Phone and precise location permissions are needed to read SIM state, service state, and subscription-scoped CellInfo. Startup scanning stays blocked until you allow them or explicitly continue without them.</string>
+    <string name="startup_simcard_allow">Allow permissions</string>
+    <string name="startup_simcard_skip">Skip</string>
+    <string name="startup_simcard_skipped_headline">SIM and cell permissions were skipped.</string>
+    <string name="startup_simcard_skipped_detail">SIM and cell info will stay unavailable until you grant phone and location permissions later.</string>
 </resources>

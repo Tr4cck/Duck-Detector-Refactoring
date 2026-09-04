@@ -42,6 +42,13 @@ namespace duckdetector::nativeroot {
             std::uint32_t version = 0;
             std::uint32_t flags = 0;
             std::uint32_t features = 0;
+            std::uint32_t uapi_version = 0;
+        };
+
+        struct KsuGetInfoLegacyCmd {
+            std::uint32_t version = 0;
+            std::uint32_t flags = 0;
+            std::uint32_t features = 0;
         };
 
         struct KsuCheckSafemodeCmd {
@@ -52,12 +59,16 @@ namespace duckdetector::nativeroot {
             std::uint32_t version = 0;
             std::uint32_t flags = 0;
             std::uint32_t features = 0;
+            std::uint32_t uapi_version = 0;
             std::uint8_t in_safe_mode = 0;
             std::uint8_t safemode_supported = 0;
             std::uint8_t hit = 0;
         };
 
-        constexpr unsigned long kKsuIoctlGetInfo = _IOC(_IOC_READ, 'K', 2, 0);
+        // Current UAPI: _IOR('K', 2, struct ksu_get_info_cmd) == 0x80104b02.
+        constexpr unsigned long kKsuIoctlGetInfo = _IOC(_IOC_READ, 'K', 2, sizeof(KsuGetInfoCmd));
+        // Deprecated fallback: _IOC(_IOC_READ, 'K', 2, 0) == 0x80004b02.
+        constexpr unsigned long kKsuIoctlGetInfoLegacy = _IOC(_IOC_READ, 'K', 2, 0);
         constexpr unsigned long kKsuIoctlCheckSafemode = _IOC(_IOC_READ, 'K', 5, 0);
         constexpr int kSeccompBlockedExitCode = 125;
 
@@ -112,11 +123,23 @@ namespace duckdetector::nativeroot {
 
                 if (driver_fd >= 0) {
                     KsuGetInfoCmd info_cmd{};
-                    if (ioctl(driver_fd, kKsuIoctlGetInfo, &info_cmd) == 0 &&
-                        info_cmd.version != 0) {
+                    bool got_info = ioctl(driver_fd, kKsuIoctlGetInfo, &info_cmd) == 0;
+                    if (!got_info) {
+                        // Older kernels only expose the deprecated legacy command.
+                        KsuGetInfoLegacyCmd legacy_cmd{};
+                        if (ioctl(driver_fd, kKsuIoctlGetInfoLegacy, &legacy_cmd) == 0) {
+                            info_cmd.version = legacy_cmd.version;
+                            info_cmd.flags = legacy_cmd.flags;
+                            info_cmd.features = legacy_cmd.features;
+                            got_info = true;
+                        }
+                    }
+
+                    if (got_info && info_cmd.version != 0) {
                         child_packet.version = info_cmd.version;
                         child_packet.flags = info_cmd.flags;
                         child_packet.features = info_cmd.features;
+                        child_packet.uapi_version = info_cmd.uapi_version;
                         child_packet.hit = 1;
 
                         KsuCheckSafemodeCmd safemode_cmd{};
@@ -224,6 +247,7 @@ namespace duckdetector::nativeroot {
             detail += ", manager context";
         }
         detail += "\nFeatures max: " + std::to_string(packet.features);
+        detail += "\nUAPI version: " + std::to_string(packet.uapi_version);
         if (packet.safemode_supported != 0) {
             detail += "\nSafe mode: ";
             detail += in_safe_mode ? "enabled" : "disabled";

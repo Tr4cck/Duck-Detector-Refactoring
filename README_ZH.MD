@@ -28,7 +28,7 @@
 # 🔍 检测覆盖范围 / Detector Coverage
 目前应用已支持以下安全领域的启发式检测：
 > `Bootloader` · `Custom ROM` · `Dangerous Apps` · `Kernel Check` · `LSPosed` · `Memory` · `Mount` · `Native Root` · `Play Integrity Fix` · `SELinux` · `SU` · `System Properties` · `TEE` · `Virtualization` · `Zygisk`
-此外，项目内置 `dashboard`（仪表盘）、`settings`（设置）和 `deviceinfo`（设备信息）等辅助模块，提供数据聚合、用户控制和设备上下文展示。
+此外，项目内置 `dashboard`（仪表盘）、`settings`（设置）、`deviceinfo`（设备信息）和 `simcard`（SIM 卡 / 蜂窝小区信息）等辅助模块，提供数据聚合、用户控制和设备 / 订阅上下文展示。
 ---
 # 📱 兼容性 / Compatibility
 

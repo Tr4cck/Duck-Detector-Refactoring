@@ -35,7 +35,7 @@ DuckDetector is an Android security detection application focusing on local, on-
 The app currently supports heuristic detection in the following security domains:
 > Bootloader · Custom ROM · Dangerous Apps · Kernel Check · LSPosed · Memory · Mount · Native Root · Play Integrity Fix · SELinux · SU · System Properties · TEE · Virtualization · Zygisk
 > 
-In addition, the project contains helper modules such as dashboard, settings, and deviceinfo to provide data aggregation, user controls, and device context visualization.
+In addition, the project contains helper modules such as dashboard, settings, deviceinfo, and simcard to provide data aggregation, user controls, and device/subscription context visualization.
 # 📱 Compatibility
 
 | Dimension / Target | Notes |

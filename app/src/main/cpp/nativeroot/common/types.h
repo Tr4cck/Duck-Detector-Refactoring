@@ -61,8 +61,9 @@ namespace duckdetector::nativeroot {
         DetectionFlags flags;
         long kernel_su_version = 0;
         bool prctl_probe_hit = false;
-        bool kernelpatch_side_channel_detected = false;
-        std::string kernelpatch_side_channel_detail;
+        bool kernelpatch_lazy_page_detected = false;
+        bool kernelpatch_auth_latency_detected = false;
+        long kernelpatch_auth_latency_ratio_milli = 0;
         bool devpts_abnormal_permission_detected = false;
         bool devpts_abnormal_permission_available = false;
         int devpts_abnormal_permission_checked_count = 0;

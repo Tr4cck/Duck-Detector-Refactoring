@@ -97,7 +97,7 @@ set(NATIVE_ROOT_SOURCES
     nativeroot/common/io_utils.cpp
     nativeroot/cgroup_bridge.cpp
     nativeroot/probes/prctl_probe.cpp
-    nativeroot/probes/kernelpatch_nr_supercall_latency_probe.cpp
+    nativeroot/probes/kernelpatch_supercall_probe.cpp
     nativeroot/probes/devpts_abnormal_permission_probe.cpp
     nativeroot/probes/ksu_supercall_probe.cpp
     nativeroot/probes/susfs_probe.cpp

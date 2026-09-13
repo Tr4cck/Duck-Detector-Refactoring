@@ -37,6 +37,9 @@ class NativeRootNativeBridgeTest {
                 SUSFS=0
                 KSU_VERSION=12000
                 PRCTL_HIT=1
+                KERNELPATCH_LAZY_PAGE_DETECTED=1
+                KERNELPATCH_AUTH_LATENCY_DETECTED=1
+                KERNELPATCH_AUTH_LATENCY_RATIO_MILLI=5260
                 DEVPTS_ABNORMAL_PERMISSION_FOUND=1
                 DEVPTS_ABNORMAL_PERMISSION_AVAILABLE=0
                 DEVPTS_ABNORMAL_PERMISSION_CHECKED=2
@@ -76,6 +79,9 @@ class NativeRootNativeBridgeTest {
         assertTrue(snapshot.kernelSuDetected)
         assertTrue(snapshot.magiskDetected)
         assertEquals(12000L, snapshot.kernelSuVersion)
+        assertTrue(snapshot.kernelPatchLazyPageDetected)
+        assertTrue(snapshot.kernelPatchAuthLatencyDetected)
+        assertEquals(5260L, snapshot.kernelPatchAuthLatencyRatioMilli)
         assertTrue(snapshot.devptsAbnormalPermission)
         assertFalse(snapshot.devptsAbnormalPermissionAvailable)
         assertEquals(2, snapshot.devptsAbnormalPermissionCheckedCount)

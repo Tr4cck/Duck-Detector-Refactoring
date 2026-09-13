@@ -119,7 +119,9 @@ class NativeRootRepository(
                 managerFingerprintResult = managerFingerprintResult,
                 tempRootArtifactResult = tempRootArtifactResult,
             ),
-            kernelPatchSideChannel = snapshot.kernelPatchSideChannel,
+            kernelPatchLazyPageDetected = snapshot.kernelPatchLazyPageDetected,
+            kernelPatchAuthLatencyDetected = snapshot.kernelPatchAuthLatencyDetected,
+            kernelPatchAuthLatencyRatioMilli = snapshot.kernelPatchAuthLatencyRatioMilli,
             ksuSupercallAttempted = snapshot.ksuSupercallAttempted,
             ksuSupercallProbeHit = snapshot.ksuSupercallProbeHit,
             ksuSupercallBlocked = snapshot.ksuSupercallBlocked,
@@ -208,20 +210,37 @@ class NativeRootRepository(
             NativeRootMethodResult(
                 label = "__NR_supercall probe",
                 summary = when {
-                    snapshot.kernelPatchSideChannel -> "Detected"
+                    snapshot.kernelPatchLazyPageDetected || snapshot.kernelPatchAuthLatencyDetected -> "Detected"
                     snapshot.available -> "Clean"
                     else -> "Unavailable"
                 },
                 outcome = when {
-                    snapshot.kernelPatchSideChannel -> NativeRootMethodOutcome.DETECTED
+                    snapshot.kernelPatchLazyPageDetected || snapshot.kernelPatchAuthLatencyDetected ->
+                        NativeRootMethodOutcome.DETECTED
+
                     snapshot.available -> NativeRootMethodOutcome.CLEAN
                     else -> NativeRootMethodOutcome.SUPPORT
                 },
                 detail = buildString {
-                    append("Ping __NR_supercall to detect KernelPatch, in older version of KernelPatch, it will use \"strncpy_from_user\" WITHOUT permission authorize, \n")
-                    append("Therefore, it can repeatedly ping __NR_supercall using only \\0 and 128 bytes of \"A\" and compare the time difference to detect KernelPatch. \n")
-                    append("This problem already fix in KernelPatch commit 84169d5d6be12e589ccac81d71dcebb80b22043a \n")
-                    append("Test Result: ${snapshot.kernelPatchSideChannelDetail}")
+                    append("Probes KernelPatch (APatch) __NR_supercall (45) with two techniques. ")
+                    append("(1) Lazy-page probe: pass an untouched anonymous page as the superkey address; the before-hook faults it in while copying the key, which mincore() then reports resident. ")
+                    append("(2) Auth-latency probe: time in-range vs out-of-range cmd values (ratio > 2 means the in-range path reached the superkey read/verify).")
+                    if (snapshot.kernelPatchLazyPageDetected) {
+                        append("\nLazy-page probe: Detected (page became resident).")
+                    }
+                    if (snapshot.kernelPatchAuthLatencyDetected) {
+                        append("\nAuth-latency probe: Detected.")
+                    }
+                    if (snapshot.kernelPatchAuthLatencyRatioMilli > 0L) {
+                        append("\nAuth-latency ratio: ")
+                        append(
+                            String.format(
+                                java.util.Locale.US,
+                                "%.2f",
+                                snapshot.kernelPatchAuthLatencyRatioMilli / 1000.0,
+                            )
+                        )
+                    }
                 },
             ),
             NativeRootMethodResult(

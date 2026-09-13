@@ -21,7 +21,7 @@
 
 #include "nativeroot/common/codec.h"
 #include "nativeroot/probes/kernel_probe.h"
-#include "nativeroot/probes/kernelpatch_nr_supercall_latency_probe.h"
+#include "nativeroot/probes/kernelpatch_supercall_probe.h"
 #include "nativeroot/probes/devpts_abnormal_permission_probe.h"
 #include "nativeroot/probes/ksu_supercall_probe.h"
 #include "nativeroot/probes/path_probe.h"
@@ -59,7 +59,7 @@ namespace duckdetector::nativeroot {
         const ProbeResult susfs_probe = run_susfs_probe();
         const ProbeResult self_process_ioc_probe = run_self_process_ioc_probe();
         const ProbeResult ksu_supercall_probe = run_ksu_supercall_probe();
-        const ProbeResult kernelpatch_supercall_latency_probe = run_kernelpatch_supercall_latency_check();
+        const ProbeResult kernelpatch_supercall_probe = run_kernelpatch_supercall_probe();
         const ProbeResult devpts_abnormal_permission_probe = run_devpts_permission_check();
         const ProbeResult path_probe = run_path_probe();
         const ProbeResult process_probe = run_process_probe();
@@ -70,8 +70,11 @@ namespace duckdetector::nativeroot {
                                      ? prctl_probe.numeric_value
                                      : ksu_supercall_probe.numeric_value;
         snapshot.prctl_probe_hit = prctl_probe.flags.kernel_su;
-        snapshot.kernelpatch_side_channel_detected = kernelpatch_supercall_latency_probe.flags.apatch;
-        snapshot.kernelpatch_side_channel_detail = kernelpatch_supercall_latency_probe.extra_text;
+        snapshot.kernelpatch_lazy_page_detected =
+                (kernelpatch_supercall_probe.extra_numeric_value & (1L << 0)) != 0;
+        snapshot.kernelpatch_auth_latency_detected =
+                (kernelpatch_supercall_probe.extra_numeric_value & (1L << 1)) != 0;
+        snapshot.kernelpatch_auth_latency_ratio_milli = kernelpatch_supercall_probe.numeric_value;
         snapshot.devpts_abnormal_permission_detected = devpts_abnormal_permission_probe.flags.root || devpts_abnormal_permission_probe.flags.kernel_su;
         snapshot.devpts_abnormal_permission_available =
                 devpts_abnormal_permission_probe.checked_count > 0 &&
@@ -113,7 +116,7 @@ namespace duckdetector::nativeroot {
         append_probe_findings(snapshot, susfs_probe, dedupe);
         append_probe_findings(snapshot, self_process_ioc_probe, dedupe);
         append_probe_findings(snapshot, ksu_supercall_probe, dedupe);
-        append_probe_findings(snapshot, kernelpatch_supercall_latency_probe, dedupe);
+        append_probe_findings(snapshot, kernelpatch_supercall_probe, dedupe);
         append_probe_findings(snapshot, devpts_abnormal_permission_probe, dedupe);
         append_probe_findings(snapshot, path_probe, dedupe);
         append_probe_findings(snapshot, process_probe, dedupe);

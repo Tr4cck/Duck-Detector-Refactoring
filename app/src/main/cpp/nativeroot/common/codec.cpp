@@ -78,8 +78,9 @@ namespace duckdetector::nativeroot {
         output << "SUSFS=" << (snapshot.flags.susfs ? '1' : '0') << '\n';
         output << "KSU_VERSION=" << snapshot.kernel_su_version << '\n';
         output << "PRCTL_HIT=" << (snapshot.prctl_probe_hit ? '1' : '0') << '\n';
-        output << "KERNELPATCH_SIDE_CHANNEL_ATTACK=" << (snapshot.kernelpatch_side_channel_detected ? '1' : '0') << '\n';
-        output << "KERNELPATCH_SIDE_CHANNEL_DETAIL=" << escape_value(snapshot.kernelpatch_side_channel_detail) << '\n';
+        output << "KERNELPATCH_LAZY_PAGE_DETECTED=" << (snapshot.kernelpatch_lazy_page_detected ? '1' : '0') << '\n';
+        output << "KERNELPATCH_AUTH_LATENCY_DETECTED=" << (snapshot.kernelpatch_auth_latency_detected ? '1' : '0') << '\n';
+        output << "KERNELPATCH_AUTH_LATENCY_RATIO_MILLI=" << snapshot.kernelpatch_auth_latency_ratio_milli << '\n';
         output << "DEVPTS_ABNORMAL_PERMISSION_FOUND=" << (snapshot.devpts_abnormal_permission_detected ? '1' : '0') << '\n';
         output << "DEVPTS_ABNORMAL_PERMISSION_AVAILABLE=" << (snapshot.devpts_abnormal_permission_available ? '1' : '0') << '\n';
         output << "DEVPTS_ABNORMAL_PERMISSION_CHECKED=" << snapshot.devpts_abnormal_permission_checked_count << '\n';

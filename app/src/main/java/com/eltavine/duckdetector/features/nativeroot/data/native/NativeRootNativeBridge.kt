@@ -74,8 +74,12 @@ class NativeRootNativeBridge {
             "SUSFS" -> copy(susfsDetected = value.asBool())
             "KSU_VERSION" -> copy(kernelSuVersion = value.toLongOrNull() ?: kernelSuVersion)
             "PRCTL_HIT" -> copy(prctlProbeHit = value.asBool())
-            "KERNELPATCH_SIDE_CHANNEL_ATTACK" -> copy(kernelPatchSideChannel = value.asBool())
-            "KERNELPATCH_SIDE_CHANNEL_DETAIL" -> copy(kernelPatchSideChannelDetail = value.decodeValue())
+            "KERNELPATCH_LAZY_PAGE_DETECTED" -> copy(kernelPatchLazyPageDetected = value.asBool())
+            "KERNELPATCH_AUTH_LATENCY_DETECTED" -> copy(kernelPatchAuthLatencyDetected = value.asBool())
+            "KERNELPATCH_AUTH_LATENCY_RATIO_MILLI" -> copy(
+                kernelPatchAuthLatencyRatioMilli = value.toLongOrNull()
+                    ?: kernelPatchAuthLatencyRatioMilli
+            )
             "DEVPTS_ABNORMAL_PERMISSION_FOUND" -> copy(devptsAbnormalPermission = value.asBool())
             "DEVPTS_ABNORMAL_PERMISSION_AVAILABLE" -> copy(devptsAbnormalPermissionAvailable = value.asBool())
             "DEVPTS_ABNORMAL_PERMISSION_CHECKED" -> copy(
